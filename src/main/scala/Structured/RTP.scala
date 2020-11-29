@@ -179,7 +179,7 @@ object RTP {
 
     val testFilter = geoIddf.filter(geoIddf("Canon.IncidentCode") === "TEST" && geoIddf("Preamble.AuthorizationKey") === "PGA0TEST")
 
-    //Pass the Test message removed Dataset into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
+    //Pass the Dataframe into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
 
     val dropDup = geoIddf.withWatermark("timestampLookUp", "24 hours").dropDuplicates("timestampLookUp","IncidentCodeLookUp","AddressGeofenceId")
 
