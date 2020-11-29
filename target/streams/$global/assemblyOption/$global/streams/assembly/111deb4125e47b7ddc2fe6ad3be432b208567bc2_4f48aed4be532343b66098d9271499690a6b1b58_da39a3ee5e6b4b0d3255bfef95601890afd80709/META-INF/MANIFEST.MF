@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: Play-DataCommons
+Implementation-Version: 2.4.0
+Specification-Vendor: com.typesafe.play
+Specification-Title: Play-DataCommons
+Implementation-Vendor-Id: com.typesafe.play
+Specification-Version: 2.4.0
+Implementation-URL: https://playframework.com
+Implementation-Vendor: com.typesafe.play
+

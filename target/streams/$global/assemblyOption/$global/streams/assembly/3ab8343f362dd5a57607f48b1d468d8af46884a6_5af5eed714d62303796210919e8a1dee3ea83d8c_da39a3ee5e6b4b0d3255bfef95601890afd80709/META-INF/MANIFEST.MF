@@ -1,0 +1,41 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1429939817539
+Build-Jdk: 1.8.0
+Built-By: tatu
+Bundle-Description: Add-on module to support JSR-310 (Java 8 Date & Time
+  API) data types.
+Bundle-DocURL: http://wiki.fasterxml.com/JacksonModuleJSR310
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-ManifestVersion: 2
+Bundle-Name: Jackson-Datatype-JSR310
+Bundle-SymbolicName: com.fasterxml.jackson.datatype.jackson-datatype-jsr
+ 310
+Bundle-Vendor: FasterXML
+Bundle-Version: 2.5.3
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.fasterxml.jackson.datatype.jsr310;version="2.5.3",co
+ m.fasterxml.jackson.datatype.jsr310.deser;version="2.5.3",com.fasterxml
+ .jackson.datatype.jsr310.ser;version="2.5.3"
+Implementation-Build-Date: 2015-04-24 22:30:11-0700
+Implementation-Title: Jackson-Datatype-JSR310
+Implementation-Vendor: FasterXML
+Implementation-Vendor-Id: com.fasterxml.jackson.datatype
+Implementation-Version: 2.5.3
+Import-Package: com.fasterxml.jackson.annotation;version="[2.5,3)",com.f
+ asterxml.jackson.core;version="[2.5,3)",com.fasterxml.jackson.core.util
+ ;version="[2.5,3)",com.fasterxml.jackson.databind;version="[2.5,3)",com
+ .fasterxml.jackson.databind.deser;version="[2.5,3)",com.fasterxml.jacks
+ on.databind.deser.std;version="[2.5,3)",com.fasterxml.jackson.databind.
+ introspect;version="[2.5,3)",com.fasterxml.jackson.databind.jsonFormatV
+ isitors;version="[2.5,3)",com.fasterxml.jackson.databind.jsontype;versi
+ on="[2.5,3)",com.fasterxml.jackson.databind.module;version="[2.5,3)",co
+ m.fasterxml.jackson.databind.node;version="[2.5,3)",com.fasterxml.jacks
+ on.databind.ser;version="[2.5,3)",com.fasterxml.jackson.databind.ser.st
+ d;version="[2.5,3)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Specification-Title: Jackson-Datatype-JSR310
+Specification-Vendor: FasterXML
+Specification-Version: 2.5.3
+Tool: Bnd-2.3.0.201405100607
+X-Compile-Source-JDK: 1.8
+X-Compile-Target-JDK: 1.8
