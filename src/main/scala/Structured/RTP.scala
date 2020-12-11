@@ -174,18 +174,10 @@ object RTP {
     //Add geoID
 
     val geoIddf = castTimestamp.withColumn("AddressGeofenceId",GeoUDF(dropRaw("Call.AddressLatitude"),dropRaw("Call.AddressLongitude")))
+    
+     //Pass the Test message removed Dataset into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
 
-    // Filter out of test messages
-
-    val testFilter = geoIddf.filter(geoIddf("Canon.IncidentCode") === "TEST" && geoIddf("Preamble.AuthorizationKey") === "PGA0TEST")
-
-    //Pass the Dataframe into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
-
-    val dropDup = geoIddf.withWatermark("timestampLookUp", "24 hours").dropDuplicates("timestampLookUp","IncidentCodeLookUp","AddressGeofenceId")
-
-    // Test messages and results of the Dedupication function are combined
-
-    val combineTestMessage = testFilter.union(dropDup)
+    val dropDup = geoIddf.withWatermark("timestampLookUp", "24 hours").dropDuplicates("GatewayLookUp","timestampLookUp","IncidentCodeLookUp","AddressGeofenceId")
 
     //  Message is json encoded and combined in to the value column
 
