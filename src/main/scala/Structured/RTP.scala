@@ -163,22 +163,31 @@ object RTP {
 
     val dropRaw = payloadFlattenedDf.drop("RawXML")
 
+    //Cast the Gateway
+
+    val castGateway = dropRaw.withColumn(("GatewayLookUp"),dropRaw.col("Preamble.Gateway").cast(DataTypes.StringType))
+
     //Cast the NatureCode
 
-    val castNatureCode = dropRaw.withColumn(("IncidentCodeLookUp"),dropRaw.col("Call.NatureCode").cast(DataTypes.StringType))
+    val castNatureCode = castGateway.withColumn(("IncidentCodeLookUp"),castGateway.col("Call.NatureCode").cast(DataTypes.StringType))
 
-    //Cast the timestamo
+    // Assign the field to time stamp based on type of message
 
-    val castTimestamp = castNatureCode.withColumn("timestampLookUp", to_timestamp($"Call.ReceivedTime", "yyyy-MM-dd'T'HH:mm:ss"))
+    val assignTimestamp = castNatureCode.withColumn("timestampLookUp",when(castNatureCode("Canon.IncidentCode") === "TEST" || castNatureCode("Preamble.AuthorizationKey") === "PGA0TEST",castNatureCode("Preamble.Timestamp")).otherwise(castNatureCode("Call.ReceivedTime")))
+
+    //Cast the timestamp
+
+    val castTimestamp = assignTimestamp.withColumn("timestampLookUp", to_timestamp($"timestampLookUp", "yyyy-MM-dd'T'HH:mm:ss"))
 
     //Add geoID
 
     val geoIddf = castTimestamp.withColumn("AddressGeofenceId",GeoUDF(dropRaw("Call.AddressLatitude"),dropRaw("Call.AddressLongitude")))
-    
-     //Pass the Test message removed Dataset into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
+
+    //Pass the Dataset into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
 
     val dropDup = geoIddf.withWatermark("timestampLookUp", "24 hours").dropDuplicates("GatewayLookUp","timestampLookUp","IncidentCodeLookUp","AddressGeofenceId")
 
+    
     //  Message is json encoded and combined in to the value column
 
      val frameValue = combineTestMessage.selectExpr("to_json(struct(*)) AS value")
