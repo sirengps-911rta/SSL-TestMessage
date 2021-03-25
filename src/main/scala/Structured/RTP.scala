@@ -3,13 +3,10 @@ package Structured
 import GeoIDLookUp.geoID
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{ArrayType, DataTypes, StringType, StructType}
-import org.apache.spark.sql.functions.{from_json, to_timestamp, udf}
-
-
+import org.apache.spark.sql.types.{ArrayType, DataTypes, IntegerType, StringType, StructType}
+import org.apache.spark.sql.functions.{col, from_json, to_timestamp, udf, when}
 
 object RTP {
-
   def main(args: Array[String]): Unit = {
 
     //Define environment configurations using ConfigFactory object
@@ -71,6 +68,9 @@ object RTP {
         .add("Version",DataTypes.StringType)
         .add("Timestamp",DataTypes.StringType))
       .add("Canon",new StructType()
+        .add("Alertable",DataTypes.StringType)
+        .add("Proximity",DataTypes.StringType)
+        .add("Delay",DataTypes.StringType)
         .add("UUID", DataTypes.StringType)
         .add("IncidentCode", DataTypes.StringType)
         .add("AddressGeofenceId", ArrayType(StringType)) )
@@ -100,6 +100,7 @@ object RTP {
         .add("AddressState",DataTypes.StringType)
         .add("AddressZipCode",DataTypes.StringType)
         .add("AddressZipCodePlus4",DataTypes.StringType)
+        .add("AddressCountry",DataTypes.StringType)
         .add("AddressCounty",DataTypes.StringType)
         .add("AddressLatitude",DataTypes.StringType)
         .add("AddressLongitude",DataTypes.StringType)
@@ -157,7 +158,7 @@ object RTP {
 
     // Create User defined function for geoLookUp
 
-    val GeoUDF = udf[List[Int],String,String](geoID.geoIDFind)
+    val GeoUDF = udf[List[(String,Int)],String,String,String](geoID.geoIDFind)
 
     // Drop Raw message
 
@@ -181,35 +182,43 @@ object RTP {
 
     //Add geoID
 
-    val geoIddf = castTimestamp.withColumn("AddressGeofenceId",GeoUDF(dropRaw("Call.AddressLatitude"),dropRaw("Call.AddressLongitude")))
+    val geoIddf = castTimestamp.withColumn("AddressGeofenceId",GeoUDF(dropRaw("Call.AddressLatitude"),dropRaw("Call.AddressLongitude"),dropRaw("Canon.Proximity")))
 
     //Pass the Dataset into the deduplication function. Only messages that have arrived in the last 24 hours are passed to the DeDuplication function
 
     val dropDup = geoIddf.withWatermark("timestampLookUp", "24 hours").dropDuplicates("GatewayLookUp","timestampLookUp","IncidentCodeLookUp","AddressGeofenceId")
 
-    
+    // Create the schema for the AddressGeofenceID transformation
+
+    val schema2 = ArrayType(new StructType().add("Id",IntegerType).add("Proximity",IntegerType))
+
+    // Apply modified schema to the message structure
+
+    val modSchema = dropDup.select(col("AddressGeofenceId").cast(schema2),col("Call"),col("Canon"),col("GatewayLookUp"),col("IncidentCodeLookUp"),col("Preamble"),col("timestampLookUp"))
+
+
     //  Message is json encoded and combined in to the value column
 
-     val frameValue = combineTestMessage.selectExpr("to_json(struct(*)) AS value")
+    val frameValue = modSchema.selectExpr("to_json(struct(*)) AS value")
 
     // The write stream into the kafka topic with kafka broker, topic, checkpoint, data loss, security, truststore and password configuration
 
     val query = frameValue.writeStream.format("kafka")
       .option("kafka.bootstrap.servers",envProps.getString("bootstrap.servers"))
-      .option("topic","RTA-ALERT").option("checkpointLocation",envProps.getString("checkpoint.location"))
+      .option("topic",envProps.getString("topic.sink")).option("checkpointLocation",envProps.getString("checkpoint.location"))
       .option("failOnDataLoss", "false")
       .option("kafka.security.protocol","SSL")
-    .option("kafka.ssl.truststore.location",envProps.getString("ssl.truststore"))
+      .option("kafka.ssl.truststore.location",envProps.getString("ssl.truststore"))
       .option("kafka.ssl.truststore.password","clientpass").start()
+
+
 
     // The query continues running until it is terminated
 
-    query.awaitTermination()
+query.awaitTermination()
 
-
-//
-
-  }
-
+    //
 
   }
+
+}
