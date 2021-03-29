@@ -190,9 +190,9 @@ object RTP {
     
     //  Message is json encoded and combined in to the value column
 
-     val frameValue = combineTestMessage.selectExpr("to_json(struct(*)) AS value")
+   val frameValue = dropDup.selectExpr("to_json(struct(*)) AS value")
 
-    // The write stream into the kafka topic with kafka broker, topic, checkpoint, data loss, security, truststore and password configuration
+ // The write stream into the kafka topic with kafka broker, topic, checkpoint, data loss, security, truststore and password configuration
 
     val query = frameValue.writeStream.format("kafka")
       .option("kafka.bootstrap.servers",envProps.getString("bootstrap.servers"))
